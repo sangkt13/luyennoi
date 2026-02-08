@@ -12,17 +12,14 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-    .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
     .recording-pulse { animation: pulse-red 2s infinite; }
     @keyframes pulse-red {
       0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
       70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
       100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
-    .mic-button { transition: all 0.3s ease; }
-    .mic-button:active { transform: scale(0.95); }
-
-    /* Scrollbar custom */
+    .mic-button { transition: all 0.25s ease; }
+    .mic-button:active { transform: scale(0.96); }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -33,11 +30,7 @@
     tailwind.config = {
       theme: {
         extend: {
-          colors: {
-            primary: '#4f46e5',
-            secondary: '#10b981',
-            accent: '#f59e0b'
-          }
+          colors: { primary: '#4f46e5', secondary: '#10b981', accent: '#f59e0b' }
         }
       }
     };
@@ -56,7 +49,6 @@
           </div>
         </div>
         <div class="flex items-center gap-4">
-          <!-- Nút cấu hình AI thay thế vị trí nút đăng nhập cũ -->
           <button onclick="app.toggleSettings()"
             class="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 hover:text-primary hover:border-primary transition shadow-sm">
             <i class="fa-solid fa-gear"></i>
@@ -67,89 +59,92 @@
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <main class="flex-1 overflow-y-auto p-6 relative" id="main-container">
-    <!-- View: Topic Grid (Home) -->
-    <div id="topic-view" class="max-w-7xl mx-auto animate-fade-in">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Chọn chủ đề luyện tập</h1>
-        <p class="text-lg text-gray-600">Luyện nói và nhận đánh giá AI ngay lập tức.</p>
-      </div>
+  <!-- Main -->
+  <main id="main-container" class="flex-1 relative overflow-hidden">
+    <!-- View: Topic Grid -->
+    <div id="topic-view" class="absolute inset-0 overflow-y-auto p-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-10">
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">Chọn chủ đề luyện tập</h1>
+          <p class="text-lg text-gray-600">Luyện nói và nhận đánh giá AI ngay lập tức.</p>
+        </div>
 
-      <!-- Search/Filter -->
-      <div class="max-w-xl mx-auto mb-8 relative">
-        <input type="text" id="search-input" placeholder="Tìm kiếm chủ đề (Hobbies, Work, Health...)"
-          class="w-full pl-12 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
-        <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
-      </div>
+        <div class="max-w-xl mx-auto mb-8 relative">
+          <input type="text" id="search-input" placeholder="Tìm kiếm chủ đề (Hobbies, Work, Health...)"
+            class="w-full pl-12 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+        </div>
 
-      <!-- Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="topic-grid">
-        <!-- Topics will be injected here via JS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="topic-grid"></div>
       </div>
     </div>
 
-    <!-- View: Practice Interface -->
-    <div id="practice-view" class="hidden max-w-7xl mx-auto h-full flex flex-col md:flex-row gap-6">
-      <!-- Left Sidebar: Questions -->
-      <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden h-[600px] md:h-auto">
-        <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-          <h2 class="font-bold text-gray-800" id="current-topic-title">Topic Name</h2>
-          <button onclick="app.goHome()" class="text-sm text-gray-500 hover:text-primary">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại
-          </button>
-        </div>
-        <div class="p-4 overflow-y-auto flex-1" id="question-list">
-          <!-- Questions injected here -->
-        </div>
-      </div>
-
-      <!-- Right Area: Recording & AI -->
-      <div class="w-full md:w-2/3 flex flex-col gap-6">
-        <!-- Recording Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
-          <div class="mb-4">
-            <h3 class="text-lg font-semibold text-gray-800 mb-1">Câu hỏi đang chọn:</h3>
-            <p class="text-primary text-xl font-medium" id="active-question-text">Hãy chọn một câu hỏi bên trái</p>
+    <!-- View: Practice -->
+    <div id="practice-view" class="absolute inset-0 overflow-y-auto p-6 hidden">
+      <div class="max-w-7xl mx-auto h-full flex flex-col md:flex-row gap-6">
+        <!-- Left Sidebar -->
+        <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden md:h-[calc(100vh-160px)]">
+          <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h2 class="font-bold text-gray-800" id="current-topic-title">Topic</h2>
+            <button onclick="app.goHome()" class="text-sm text-gray-500 hover:text-primary">
+              <i class="fa-solid fa-arrow-left"></i> Quay lại
+            </button>
           </div>
+          <div class="p-4 overflow-y-auto flex-1" id="question-list"></div>
+        </div>
 
-          <!-- Transcript Area -->
-          <textarea id="transcript-area"
-            class="w-full flex-1 p-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4 resize-none font-medium text-gray-700"
-            placeholder="Nội dung bài nói của bạn sẽ hiện ở đây (hoặc gõ trực tiếp)..."
-            spellcheck="false"></textarea>
-
-          <!-- Controls -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <button id="btn-record" onclick="app.toggleRecording()"
-                class="mic-button group flex items-center justify-center w-14 h-14 rounded-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white border-2 border-red-500">
-                <i class="fa-solid fa-microphone text-xl"></i>
-              </button>
-              <span class="text-sm text-gray-500" id="record-status">Nhấn để nói</span>
+        <!-- Right Area -->
+        <div class="w-full md:w-2/3 flex flex-col gap-6">
+          <!-- Recording -->
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex-1 flex flex-col md:min-h-[calc(100vh-360px)]">
+            <div class="mb-4">
+              <h3 class="text-lg font-semibold text-gray-800 mb-1">Câu hỏi đang chọn:</h3>
+              <p class="text-primary text-xl font-medium" id="active-question-text">Hãy chọn một câu hỏi bên trái</p>
             </div>
 
-            <div class="flex gap-3">
-              <button onclick="app.clearTranscript()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
-                Xóa
-              </button>
-              <button onclick="app.analyzeSpeaking()"
-                class="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg shadow hover:shadow-lg transition flex items-center gap-2">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm điểm AI
-              </button>
+            <textarea id="transcript-area"
+              class="w-full flex-1 min-h-[180px] p-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4 resize-none font-medium text-gray-700"
+              placeholder="Nội dung bài nói của bạn sẽ hiện ở đây (hoặc gõ trực tiếp)..."
+              spellcheck="false"></textarea>
+
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-2">
+                <button id="btn-record" onclick="app.toggleRecording()"
+                  class="mic-button group flex items-center justify-center w-14 h-14 rounded-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white border-2 border-red-500">
+                  <i class="fa-solid fa-microphone text-xl"></i>
+                </button>
+                <span class="text-sm text-gray-500" id="record-status">Nhấn để nói</span>
+              </div>
+
+              <div class="flex gap-3 flex-wrap">
+                <button onclick="app.clearTranscript()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                  Xóa
+                </button>
+
+                <button onclick="app.fixTranscriptByAI()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:border-primary hover:text-primary transition flex items-center gap-2">
+                  <i class="fa-solid fa-spell-check"></i> Sửa transcript
+                </button>
+
+                <button onclick="app.analyzeSpeaking()"
+                  class="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg shadow hover:shadow-lg transition flex items-center gap-2">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm điểm AI
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- AI Feedback Section -->
-        <div id="ai-result" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hidden">
-          <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
-            <h3 class="text-lg font-bold text-gray-800">
-              <i class="fa-solid fa-robot text-accent mr-2"></i>Đánh giá của AI
-            </h3>
-            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">IELTS Part 1</span>
+          <!-- AI Result -->
+          <div id="ai-result" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hidden">
+            <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+              <h3 class="text-lg font-bold text-gray-800">
+                <i class="fa-solid fa-robot text-accent mr-2"></i>Đánh giá của AI
+              </h3>
+              <span id="ai-badge" class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                IELTS Part 1
+              </span>
+            </div>
+            <div id="ai-content" class="prose prose-sm max-w-none text-gray-700"></div>
           </div>
-          <div id="ai-content" class="prose prose-sm max-w-none text-gray-700"></div>
         </div>
       </div>
     </div>
@@ -166,18 +161,36 @@
       </div>
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">OpenAI / Gemini API Key</label>
-        <input type="password" id="api-key-input" placeholder="sk-..."
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" />
-        <p class="text-xs text-gray-500 mt-1">Key của bạn được lưu cục bộ trên trình duyệt.</p>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Nhà cung cấp (Provider)</label>
+        <select id="ai-provider-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="openai">OpenAI</option>
+          <option value="gemini">Gemini</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Nếu deploy public: nên dùng serverless để không lộ key.</p>
       </div>
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Mô hình AI</label>
-        <select id="ai-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Nhanh)</option>
-          <option value="gpt-4o">GPT-4o (Chính xác)</option>
+        <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+        <input type="password" id="api-key-input" placeholder="sk-... hoặc Gemini key..."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" />
+        <p class="text-xs text-gray-500 mt-1">Key được lưu cục bộ trên trình duyệt (localStorage).</p>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Mô hình</label>
+        <select id="ai-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2"></select>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Giọng/Accent để nhận dạng (Speech)</label>
+        <select id="speech-lang-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="en-AU">English (AU)</option>
+          <option value="en-IN">English (IN)</option>
+          <option value="vi-VN">Vietnamese (vi-VN)</option>
         </select>
+        <p class="text-xs text-gray-500 mt-1">Chọn đúng accent sẽ giảm nghe sai từ.</p>
       </div>
 
       <button onclick="app.saveSettings()" class="w-full bg-primary text-white rounded-lg py-2 font-medium hover:bg-indigo-700">
@@ -187,34 +200,8 @@
   </div>
 
   <script>
-    // DATA SOURCE
+    // ===== DATA SOURCE (Part 1 + Hard topics) =====
     const topicsData = [
-      {
-        id: "hobbies",
-        title: "Hobbies",
-        icon: "fa-gamepad",
-        color: "bg-pink-100 text-pink-600",
-        questions: [
-          "Do you have the same hobbies as your family members?",
-          "Do you have a hobby that you've had since childhood?",
-          "Did you have any hobbies when you were a child?",
-          "Do you have any hobbies?"
-        ]
-      },
-      {
-        id: "scenery",
-        title: "Scenery",
-        icon: "fa-mountain-sun",
-        color: "bg-green-100 text-green-600",
-        questions: [
-          "Where can you enjoy beautiful views where you live?",
-          "What’s the best view that you have ever enjoyed?",
-          "Do you take photos of good views?",
-          "Do you book rooms that have good views when you go travelling?",
-          "Do you look out the window at the scenery when travelling by bus or car?",
-          "Do you prefer the mountains or the sea?"
-        ]
-      },
       {
         id: "health",
         title: "Health",
@@ -230,43 +217,101 @@
         ]
       },
       {
-        id: "work_study",
-        title: "Work or Studies",
-        icon: "fa-briefcase",
+        id: "technology",
+        title: "Technology & Apps",
+        icon: "fa-mobile-screen-button",
+        color: "bg-indigo-100 text-indigo-600",
+        questions: [
+          "What app do you use the most and why?",
+          "Do you think technology makes life easier or more stressful?",
+          "How often do you update your phone or laptop?",
+          "Do you prefer learning online or offline?",
+          "What are the disadvantages of using social media too much?",
+          "Do you think AI will change education in the future?"
+        ]
+      },
+      {
+        id: "worklife",
+        title: "Work–Life Balance",
+        icon: "fa-scale-balanced",
         color: "bg-blue-100 text-blue-600",
         questions: [
-          "Are you a student or do you work now?",
-          "What would you like to do in the future?",
-          "What do you think is the most important at the moment?",
-          "Why did you choose to do that type of work?",
-          "Do you like your job?",
-          "Do you prefer to work in the morning or the afternoon?"
+          "How do you balance work and rest?",
+          "Do you often feel stressed because of work or study?",
+          "What do you usually do to relax after a busy day?",
+          "Do you think people should work fewer hours?",
+          "What makes a job satisfying?",
+          "Do you think working from home is a good idea?"
         ]
       },
       {
-        id: "photos",
-        title: "Taking Photos",
-        icon: "fa-camera",
-        color: "bg-purple-100 text-purple-600",
+        id: "environment",
+        title: "Environment (Hard)",
+        icon: "fa-leaf",
+        color: "bg-green-100 text-green-700",
         questions: [
-          "Do you take photos by camera or phone?",
-          "How do you deal with pictures after you take them?",
-          "Do you want to learn photography to improve your taking-photo skills?",
-          "Is it good to keep photos on a cell phone?",
-          "Do you like taking photos of yourself?"
+          "What are the biggest environmental problems in your city?",
+          "Do you think individuals can really help the environment?",
+          "Should governments punish people who pollute?",
+          "What can schools do to teach environmental awareness?",
+          "Is recycling common in your country?",
+          "Do you think climate change will affect your future?"
         ]
       },
       {
-        id: "area",
-        title: "The area you live in",
-        icon: "fa-map-location-dot",
-        color: "bg-yellow-100 text-yellow-600",
+        id: "education",
+        title: "Education & Exams (Hard)",
+        icon: "fa-graduation-cap",
+        color: "bg-yellow-100 text-yellow-700",
         questions: [
-          "Do you like the area that you live in?",
-          "Where do you like to go in that area?",
-          "Do you know any of your neighbors?",
-          "Are there any things you don't like about your area?",
-          "Do you like living in the countryside?"
+          "Do exams measure real ability?",
+          "Should students learn more practical skills at school?",
+          "What makes a good teacher?",
+          "Do you prefer group study or self-study?",
+          "How can students improve their speaking skills?",
+          "Should universities use AI tools in teaching?"
+        ]
+      },
+      {
+        id: "socialmedia",
+        title: "Social Media & Privacy (Hard)",
+        icon: "fa-shield-halved",
+        color: "bg-rose-100 text-rose-700",
+        questions: [
+          "Do you think social media is good for communication?",
+          "What are the risks of sharing too much online?",
+          "Should governments control social media content?",
+          "How can people protect their privacy online?",
+          "Do you trust online news?",
+          "Do you think social media affects mental health?"
+        ]
+      },
+      {
+        id: "hobbies",
+        title: "Hobbies",
+        icon: "fa-gamepad",
+        color: "bg-pink-100 text-pink-600",
+        questions: [
+          "Do you have the same hobbies as your family members?",
+          "Do you have a hobby that you've had since childhood?",
+          "Did you have any hobbies when you were a child?",
+          "Do you have any hobbies?",
+          "What hobby would you like to try in the future?",
+          "Do you prefer indoor or outdoor hobbies?"
+        ]
+      },
+      {
+        id: "scenery",
+        title: "Scenery",
+        icon: "fa-mountain-sun",
+        color: "bg-emerald-100 text-emerald-700",
+        questions: [
+          "Where can you enjoy beautiful views where you live?",
+          "What’s the best view that you have ever enjoyed?",
+          "Do you take photos of good views?",
+          "Do you book rooms that have good views when you go travelling?",
+          "Do you look out the window at the scenery when travelling by bus or car?",
+          "Do you prefer the mountains or the sea?"
         ]
       },
       {
@@ -278,93 +323,116 @@
           "Do you get up early in the morning?",
           "Do you have the same morning routine every day?",
           "Do you usually eat breakfast at home?",
-          "What do you usually do in the morning?"
-        ]
-      },
-      {
-        id: "gifts",
-        title: "Gifts",
-        icon: "fa-gift",
-        color: "bg-rose-100 text-rose-600",
-        questions: [
-          "Have you ever sent handmade gifts to others?",
-          "How to choose a gift?",
-          "Do you like giving gifts/presents?",
-          "When do you usually give gifts to others?",
-          "What gift have you received recently?"
+          "What do you usually do in the morning?",
+          "Do you think mornings are productive for you?",
+          "What is the best way to start a day?"
         ]
       },
       {
         id: "reading",
         title: "Reading",
         icon: "fa-book-open",
-        color: "bg-indigo-100 text-indigo-600",
+        color: "bg-violet-100 text-violet-700",
         questions: [
           "Which do you prefer, reading books or watching movies?",
           "Are your reading habits now different than before?",
           "Do you often read books? When?",
-          "Do you prefer to read on paper or on a screen?"
-        ]
-      },
-      {
-        id: "pets",
-        title: "Pets",
-        icon: "fa-paw",
-        color: "bg-stone-100 text-stone-600",
-        questions: [
-          "Do you keep a pet?",
-          "Did you have any pets when you were a child?",
-          "What's your favorite animal? Why?",
-          "Where do you prefer to keep your pet, indoors or outdoors?"
-        ]
-      },
-      {
-        id: "typing",
-        title: "Typing",
-        icon: "fa-keyboard",
-        color: "bg-gray-100 text-gray-600",
-        questions: [
-          "Do you prefer typing or handwriting?",
-          "Do you type on a desktop or laptop keyboard every day?",
-          "When did you learn how to type on a keyboard?",
-          "How do you improve your typing?"
-        ]
-      },
-      {
-        id: "arts",
-        title: "Arts and Drawing",
-        icon: "fa-palette",
-        color: "bg-teal-100 text-teal-600",
-        questions: [
-          "Do you like art?",
-          "Do you like visiting art galleries?",
-          "Do you like drawing? Why?",
-          "Did you learn to draw or paint when you were younger?"
+          "Do you prefer to read on paper or on a screen?",
+          "What kind of books do you like?",
+          "Do you think reading is important today?"
         ]
       }
     ];
 
-    // APP LOGIC
+    // Model presets
+    const MODELS = {
+      openai: [
+        { value: "gpt-4o-mini", label: "gpt-4o-mini (Nhanh/giá rẻ)" },
+        { value: "gpt-4o", label: "gpt-4o (Chính xác)" },
+        { value: "gpt-3.5-turbo", label: "gpt-3.5-turbo (Cũ)" }
+      ],
+      gemini: [
+        { value: "gemini-1.5-flash", label: "gemini-1.5-flash (Nhanh)" },
+        { value: "gemini-1.5-pro", label: "gemini-1.5-pro (Mạnh)" }
+      ]
+    };
+
+    // ===== APP =====
     const app = {
       currentTopic: null,
       currentQuestion: null,
       isRecording: false,
       recognition: null,
-      apiKey: localStorage.getItem('openai_key') || '',
+
+      settings: {
+        provider: localStorage.getItem('ai_provider') || 'openai',
+        apiKey: localStorage.getItem('ai_key') || '',
+        model: localStorage.getItem('ai_model') || '',
+        speechLang: localStorage.getItem('speech_lang') || 'en-US',
+      },
 
       init() {
         this.renderTopics(topicsData);
         this.setupSpeechRecognition();
+        this.showView('topic');
 
-        // Load saved key to input
-        if (this.apiKey) document.getElementById('api-key-input').value = this.apiKey;
-
-        // Search listener
+        // search
         document.getElementById('search-input').addEventListener('input', (e) => {
           const term = e.target.value.toLowerCase();
           const filtered = topicsData.filter(t => t.title.toLowerCase().includes(term));
           this.renderTopics(filtered);
         });
+
+        // settings init
+        const providerSel = document.getElementById('ai-provider-select');
+        const keyInput = document.getElementById('api-key-input');
+        const speechSel = document.getElementById('speech-lang-select');
+
+        providerSel.value = this.settings.provider;
+        keyInput.value = this.settings.apiKey;
+        speechSel.value = this.settings.speechLang;
+
+        providerSel.addEventListener('change', () => {
+          this.settings.provider = providerSel.value;
+          this.populateModelSelect();
+        });
+
+        speechSel.addEventListener('change', (e) => {
+          this.settings.speechLang = e.target.value;
+          localStorage.setItem('speech_lang', this.settings.speechLang);
+          if (this.recognition) this.recognition.lang = this.settings.speechLang;
+        });
+
+        this.populateModelSelect();
+      },
+
+      showView(name) {
+        const tv = document.getElementById('topic-view');
+        const pv = document.getElementById('practice-view');
+        if (name === 'topic') {
+          tv.classList.remove('hidden');
+          pv.classList.add('hidden');
+        } else {
+          tv.classList.add('hidden');
+          pv.classList.remove('hidden');
+        }
+        document.getElementById('main-container').scrollTop = 0;
+      },
+
+      populateModelSelect() {
+        const modelSel = document.getElementById('ai-model-select');
+        const provider = this.settings.provider;
+        const list = MODELS[provider] || [];
+        modelSel.innerHTML = list.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+
+        const saved = localStorage.getItem('ai_model');
+        const exists = list.some(m => m.value === saved);
+        this.settings.model = exists ? saved : (list[0]?.value || '');
+        modelSel.value = this.settings.model;
+
+        modelSel.onchange = () => {
+          this.settings.model = modelSel.value;
+        };
       },
 
       renderTopics(data) {
@@ -391,14 +459,9 @@
         this.currentTopic = topicsData.find(t => t.id === id);
         if (!this.currentTopic) return;
 
-        document.getElementById('topic-view').classList.add('hidden');
-        const pv = document.getElementById('practice-view');
-        pv.classList.remove('hidden');
-        pv.classList.add('flex');
-
+        this.showView('practice');
         document.getElementById('current-topic-title').innerText = this.currentTopic.title;
 
-        // Render Questions
         const list = document.getElementById('question-list');
         list.innerHTML = this.currentTopic.questions.map((q, index) => `
           <div onclick="app.selectQuestion(${index})"
@@ -407,10 +470,8 @@
           </div>
         `).join('');
 
-        // Reset state
         this.selectQuestion(0);
         this.clearTranscript();
-        document.getElementById('ai-result').classList.add('hidden');
       },
 
       selectQuestion(index) {
@@ -423,11 +484,8 @@
       },
 
       goHome() {
-        const pv = document.getElementById('practice-view');
-        pv.classList.add('hidden');
-        pv.classList.remove('flex');
-        document.getElementById('topic-view').classList.remove('hidden');
         this.stopRecording();
+        this.showView('topic');
       },
 
       setupSpeechRecognition() {
@@ -436,14 +494,12 @@
           this.recognition = new SpeechRecognition();
           this.recognition.continuous = true;
           this.recognition.interimResults = true;
-          this.recognition.lang = 'en-US';
+          this.recognition.lang = this.settings.speechLang || 'en-US';
 
           this.recognition.onresult = (event) => {
             let finalTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-              }
+              if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
             }
             if (finalTranscript) {
               const area = document.getElementById('transcript-area');
@@ -457,20 +513,17 @@
             this.stopRecording();
           };
         } else {
-          alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome.");
+          alert("Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome.");
           document.getElementById('btn-record').disabled = true;
         }
       },
 
-      toggleRecording() {
-        if (this.isRecording) this.stopRecording();
-        else this.startRecording();
-      },
+      toggleRecording() { this.isRecording ? this.stopRecording() : this.startRecording(); },
 
       startRecording() {
         if (!this.recognition) return;
         this.isRecording = true;
-        this.recognition.start();
+        try { this.recognition.start(); } catch (_) {}
 
         const btn = document.getElementById('btn-record');
         btn.classList.add('recording-pulse', 'bg-red-600', 'text-white');
@@ -495,28 +548,130 @@
       toggleSettings() {
         const modal = document.getElementById('settings-modal');
         if (modal.classList.contains('hidden')) {
-          modal.classList.remove('hidden');
-          modal.classList.add('flex');
+          modal.classList.remove('hidden'); modal.classList.add('flex');
         } else {
-          modal.classList.add('hidden');
-          modal.classList.remove('flex');
+          modal.classList.add('hidden'); modal.classList.remove('flex');
         }
       },
 
       saveSettings() {
+        const provider = document.getElementById('ai-provider-select').value;
         const key = document.getElementById('api-key-input').value.trim();
-        if (key) {
-          localStorage.setItem('openai_key', key);
-          this.apiKey = key;
-          alert("Đã lưu API Key thành công!");
-        }
+        const model = document.getElementById('ai-model-select').value;
+        const speechLang = document.getElementById('speech-lang-select').value;
+
+        this.settings.provider = provider;
+        this.settings.apiKey = key;
+        this.settings.model = model;
+        this.settings.speechLang = speechLang;
+
+        localStorage.setItem('ai_provider', provider);
+        localStorage.setItem('ai_key', key);
+        localStorage.setItem('ai_model', model);
+        localStorage.setItem('speech_lang', speechLang);
+
+        if (this.recognition) this.recognition.lang = speechLang;
+
+        alert("Đã lưu cài đặt!");
         this.toggleSettings();
+      },
+
+      buildPrompt(transcript) {
+        return `
+Act as an IELTS Speaking Examiner.
+
+Topic: ${this.currentTopic?.title || ""}
+Question: "${this.currentQuestion || ""}"
+Student Answer: "${transcript}"
+
+Please provide feedback in Vietnamese with Markdown:
+1) Estimated Band Score (0-9)
+2) Corrections for Grammar & Vocabulary errors (list errors + correction)
+3) Improved version of the answer (natural, band 6.0-7.0)
+4) Pronunciation tips (ending sounds, word stress) based on typical Vietnamese accent
+5) 5 useful phrases/collocations for this topic
+`.trim();
+      },
+
+      async callAI(prompt, temperature = 0.7) {
+        const provider = this.settings.provider;
+        const apiKey = this.settings.apiKey;
+        const model = this.settings.model || document.getElementById('ai-model-select').value;
+
+        if (provider === 'openai') {
+          const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: "user", content: prompt }],
+              temperature
+            })
+          });
+          const data = await resp.json();
+          if (data.error) throw new Error(data.error.message || 'OpenAI API error');
+          return data.choices?.[0]?.message?.content || "";
+        }
+
+        // Gemini
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { temperature }
+          })
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error.message || 'Gemini API error');
+        return data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n") || "";
+      },
+
+      async fixTranscriptByAI() {
+        const area = document.getElementById('transcript-area');
+        const raw = area.value.trim();
+        if (!raw) { alert("Chưa có transcript để sửa."); return; }
+        if (!this.settings.apiKey) { alert("Bạn cần nhập API Key để dùng tính năng sửa transcript."); return; }
+
+        const prompt = `
+You are a speech-to-text correction assistant for Vietnamese learners speaking English.
+The transcript below may contain wrong words due to accent recognition.
+Task:
+1) Produce a corrected English transcript that best matches what the speaker likely meant.
+2) Keep it natural and simple (IELTS band 5-6).
+3) Do NOT add new ideas. Just fix mistaken words and grammar lightly.
+Return ONLY the corrected transcript text.
+
+Transcript:
+"""${raw}"""
+`.trim();
+
+        area.disabled = true;
+        const old = area.value;
+        area.value = "Đang sửa transcript bằng AI...";
+
+        try {
+          let out = await this.callAI(prompt, 0.2);
+          out = (out || "").trim();
+          if (!out) throw new Error("Không nhận được kết quả sửa transcript.");
+          area.value = out;
+        } catch (e) {
+          area.value = old;
+          alert("Lỗi sửa transcript: " + e.message);
+        } finally {
+          area.disabled = false;
+        }
       },
 
       async analyzeSpeaking() {
         const transcript = document.getElementById('transcript-area').value;
         const aiBox = document.getElementById('ai-result');
         const aiContent = document.getElementById('ai-content');
+        const badge = document.getElementById('ai-badge');
 
         if (!transcript.trim()) {
           alert("Vui lòng ghi âm hoặc nhập câu trả lời trước khi chấm điểm.");
@@ -524,71 +679,41 @@
         }
 
         aiBox.classList.remove('hidden');
-        aiContent.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích câu trả lời của bạn...</div>';
+        aiContent.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích câu trả lời...</div>';
 
-        // MOCK RESPONSE IF NO KEY
-        if (!this.apiKey) {
-          setTimeout(() => {
-            const mockResponse = `
+        const provider = this.settings.provider;
+        badge.textContent = provider === 'gemini' ? 'Gemini' : 'OpenAI';
+
+        if (!this.settings.apiKey) {
+          const mock = `
 **Lưu ý:** Đây là kết quả mô phỏng vì chưa có API Key.
 
-### Điểm ước lượng: 6.5
+### Band ước lượng: 5.0 – 5.5
+**Vấn đề chính:**
+- Câu trả lời quá ngắn.
+- Ngữ pháp chưa đúng.
 
-**Grammar:**
-- Bạn sử dụng các câu đơn khá tốt.
-- *Gợi ý:* Hãy thử dùng thêm các từ nối như "However", "Furthermore" để câu phức tạp hơn.
+**Gợi ý sửa nhanh:**
+> *To be honest, I'm quite busy, so I don't exercise every day. However, I try to walk whenever I can and drink enough water.*
 
-**Vocabulary:**
-- Từ vựng thuộc chủ đề **${this.currentTopic.title}** khá ổn.
-- *Gợi ý nâng cao:* Thay vì dùng "good", hãy dùng "spectacular" hoặc "breathtaking".
-
-**Pronunciation:**
-- Cần chú ý âm đuôi (ending sounds) rõ hơn.
+**Cụm từ nên dùng:**
+- *to be honest*
+- *I try to...*
+- *whenever I can*
+- *a balanced diet*
+- *stay active*
 `;
-            aiContent.innerHTML = marked.parse(mockResponse);
-            alert("Vui lòng nhập API Key trong phần Cài đặt để sử dụng AI thật.");
-          }, 1200);
+          aiContent.innerHTML = marked.parse(mock);
+          alert("Bạn hãy nhập API Key trong Cấu hình AI để dùng AI thật.");
           return;
         }
 
-        // REAL API CALL
         try {
-          const prompt = `
-Act as an IELTS Examiner.
-
-Topic: ${this.currentTopic.title}
-Question: "${this.currentQuestion}"
-Student Answer: "${transcript}"
-
-Please provide feedback in Vietnamese:
-1) Estimated Band Score (0-9)
-2) Corrections for Grammar & Vocabulary errors
-3) A better version of the answer (Paraphrase)
-
-Format with Markdown.
-          `.trim();
-
-          const model = document.getElementById('ai-model-select').value;
-
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${this.apiKey}`
-            },
-            body: JSON.stringify({
-              model,
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.7
-            })
-          });
-
-          const data = await response.json();
-          if (data.error) throw new Error(data.error.message || 'Unknown API error');
-
-          aiContent.innerHTML = marked.parse(data.choices?.[0]?.message?.content || 'Không có nội dung phản hồi.');
-        } catch (error) {
-          aiContent.innerHTML = `<div class="text-red-500">Lỗi kết nối AI: ${error.message}. Kiểm tra lại API Key.</div>`;
+          const prompt = this.buildPrompt(transcript);
+          const out = await this.callAI(prompt, 0.7);
+          aiContent.innerHTML = marked.parse(out || "Không có phản hồi.");
+        } catch (err) {
+          aiContent.innerHTML = `<div class="text-red-500">Lỗi kết nối AI: ${err.message}</div>`;
         }
       }
     };
