@@ -1,6 +1,1172 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Speaking Pro - AI Powered</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .recording-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .mic-button {
+            transition: all 0.3s ease;
+        }
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+        /* Scrollbar custom */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#10b981',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="app.goHome()">
+                        <i class="fa-solid fa-microphone-lines text-primary text-2xl"></i>
+                        <span class="font-bold text-xl text-gray-800 tracking-tight">IELTS Speaking Pro</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Nút cấu hình AI thay thế vị trí nút đăng nhập cũ -->
+                    <button onclick="app.toggleSettings()" class="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 hover:text-primary hover:border-primary transition shadow-sm">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Cấu hình AI</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-6 relative" id="main-container">
+        
+        <!-- View: Topic Grid (Home) -->
+        <div id="topic-view" class="max-w-7xl mx-auto animate-fade-in">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Chọn chủ đề luyện tập</h1>
+                <p class="text-lg text-gray-600">Luyện nói và nhận đánh giá AI ngay lập tức.</p>
+            </div>
+
+            <!-- Search/Filter -->
+            <div class="max-w-xl mx-auto mb-8 relative">
+                <input type="text" id="search-input" placeholder="Tìm kiếm chủ đề (Hobbies, Work, Health...)" 
+                    class="w-full pl-12 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+            </div>
+
+            <!-- Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="topic-grid">
+                <!-- Topics will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- View: Practice Interface -->
+        <div id="practice-view" class="hidden max-w-7xl mx-auto h-full flex flex-col md:flex-row gap-6">
+            <!-- Left Sidebar: Questions -->
+            <div class="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden h-[600px] md:h-auto">
+                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 class="font-bold text-gray-800" id="current-topic-title">Topic Name</h2>
+                    <button onclick="app.goHome()" class="text-sm text-gray-500 hover:text-primary">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại
+                    </button>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1" id="question-list">
+                    <!-- Questions injected here -->
+                </div>
+            </div>
+
+            <!-- Right Area: Recording & AI -->
+            <div class="w-full md:w-2/3 flex flex-col gap-6">
+                
+                <!-- Recording Section -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">Câu hỏi đang chọn:</h3>
+                        <p class="text-primary text-xl font-medium" id="active-question-text">Hãy chọn một câu hỏi bên trái</p>
+                    </div>
+
+                    <!-- Transcript Area -->
+                    <textarea id="transcript-area" 
+                        class="w-full flex-1 p-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4 resize-none font-medium text-gray-700"
+                        placeholder="Nội dung bài nói của bạn sẽ hiện ở đây (hoặc gõ trực tiếp)..." spellcheck="false"></textarea>
+
+                    <!-- Controls -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                             <button id="btn-record" onclick="app.toggleRecording()" 
+                                class="mic-button group flex items-center justify-center w-14 h-14 rounded-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white border-2 border-red-500">
+                                <i class="fa-solid fa-microphone text-xl"></i>
+                            </button>
+                            <span class="text-sm text-gray-500" id="record-status">Nhấn để nói</span>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="app.clearTranscript()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                                Xóa
+                            </button>
+                            <button onclick="app.analyzeSpeaking()" class="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg shadow hover:shadow-lg transition flex items-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm điểm AI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Feedback Section -->
+                <div id="ai-result" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hidden">
+                    <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                        <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-robot text-accent mr-2"></i>Đánh giá của AI</h3>
+                        <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">IELTS Part 1</span>
+                    </div>
+                    <div id="ai-content" class="prose prose-sm max-w-none text-gray-700">
+                        <!-- AI Output Markdown -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Cài đặt AI</h3>
+                <button onclick="app.toggleSettings()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">OpenAI / Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="sk-..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none">
+                <p class="text-xs text-gray-500 mt-1">Key của bạn được lưu cục bộ trên trình duyệt.</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mô hình AI</label>
+                <select id="ai-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Nhanh)</option>
+                    <option value="gpt-4o">GPT-4o (Chính xác)</option>
+                </select>
+            </div>
+            <button onclick="app.saveSettings()" class="w-full bg-primary text-white rounded-lg py-2 font-medium hover:bg-indigo-700">Lưu cài đặt</button>
+        </div>
+    </div>
+
+    <script>
+        // DATA SOURCE
+        const topicsData = [
+            {
+                id: "hobbies",
+                title: "Hobbies",
+                icon: "fa-gamepad",
+                color: "bg-pink-100 text-pink-600",
+                questions: [
+                    "Do you have the same hobbies as your family members?",
+                    "Do you have a hobby that you've had since childhood?",
+                    "Did you have any hobbies when you were a child?",
+                    "Do you have any hobbies?"
+                ]
+            },
+            {
+                id: "scenery",
+                title: "Scenery",
+                icon: "fa-mountain-sun",
+                color: "bg-green-100 text-green-600",
+                questions: [
+                    "Where can you enjoy beautiful views where you live?",
+                    "What’s the best view that you have ever enjoyed?",
+                    "Do you take photos of good views?",
+                    "Do you book rooms that have good views when you go travelling?",
+                    "Do you look out the window at the scenery when travelling by bus or car?",
+                    "Do you prefer the mountains or the sea?"
+                ]
+            },
+            {
+                id: "health",
+                title: "Health",
+                icon: "fa-heart-pulse",
+                color: "bg-red-100 text-red-600",
+                questions: [
+                    "How do you keep healthy?",
+                    "What are your favorite sports?",
+                    "Are there health classes in your school?",
+                    "What sports help people stay healthy?",
+                    "Is it easy for people to exercise in your country?",
+                    "Did you learn how to live a healthy lifestyle when you were a child?"
+                ]
+            },
+            {
+                id: "work_study",
+                title: "Work or Studies",
+                icon: "fa-briefcase",
+                color: "bg-blue-100 text-blue-600",
+                questions: [
+                    "Are you a student or do you work now?",
+                    "What would you like to do in the future?",
+                    "What do you think is the most important at the moment?",
+                    "Why did you choose to do that type of work?",
+                    "Do you like your job?",
+                    "Do you prefer to work in the morning or the afternoon?"
+                ]
+            },
+            {
+                id: "photos",
+                title: "Taking Photos",
+                icon: "fa-camera",
+                color: "bg-purple-100 text-purple-600",
+                questions: [
+                    "Do you take photos by camera or phone?",
+                    "How do you deal with pictures after you take them?",
+                    "Do you want to learn photography to improve your taking-photo skills?",
+                    "Is it good to keep photos on a cell phone?",
+                    "Do you like taking photos of yourself?"
+                ]
+            },
+            {
+                id: "area",
+                title: "The area you live in",
+                icon: "fa-map-location-dot",
+                color: "bg-yellow-100 text-yellow-600",
+                questions: [
+                    "Do you like the area that you live in?",
+                    "Where do you like to go in that area?",
+                    "Do you know any of your neighbors?",
+                    "Are there any things you don't like about your area?",
+                    "Do you like living in the countryside?"
+                ]
+            },
+            {
+                id: "morning",
+                title: "Morning Time",
+                icon: "fa-sun",
+                color: "bg-orange-100 text-orange-600",
+                questions: [
+                    "Do you get up early in the morning?",
+                    "Do you have the same morning routine every day?",
+                    "Do you usually eat breakfast at home?",
+                    "What do you usually do in the morning?"
+                ]
+            },
+            {
+                id: "gifts",
+                title: "Gifts",
+                icon: "fa-gift",
+                color: "bg-rose-100 text-rose-600",
+                questions: [
+                    "Have you ever sent handmade gifts to others?",
+                    "How to choose a gift?",
+                    "Do you like giving gifts/presents?",
+                    "When do you usually give gifts to others?",
+                    "What gift have you received recently?"
+                ]
+            },
+            {
+                id: "reading",
+                title: "Reading",
+                icon: "fa-book-open",
+                color: "bg-indigo-100 text-indigo-600",
+                questions: [
+                    "Which do you prefer, reading books or watching movies?",
+                    "Are your reading habits now different than before?",
+                    "Do you often read books? When?",
+                    "Do you prefer to read on paper or on a screen?"
+                ]
+            },
+            {
+                id: "pets",
+                title: "Pets",
+                icon: "fa-paw",
+                color: "bg-stone-100 text-stone-600",
+                questions: [
+                    "Do you keep a pet?",
+                    "Did you have any pets when you were a child?",
+                    "What's your favorite animal? Why?",
+                    "Where do you prefer to keep your pet, indoors or outdoors?"
+                ]
+            },
+             {
+                id: "typing",
+                title: "Typing",
+                icon: "fa-keyboard",
+                color: "bg-gray-100 text-gray-600",
+                questions: [
+                    "Do you prefer typing or handwriting?",
+                    "Do you type on a desktop or laptop keyboard every day?",
+                    "When did you learn how to type on a keyboard?",
+                    "How do you improve your typing?"
+                ]
+            },
+            {
+                id: "arts",
+                title: "Arts and Drawing",
+                icon: "fa-palette",
+                color: "bg-teal-100 text-teal-600",
+                questions: [
+                    "Do you like art?",
+                    "Do you like visiting art galleries?",
+                    "Do you like drawing? Why?",
+                    "Did you learn to draw or paint when you were younger?"
+                ]
+            }
+        ];
+
+        // APP LOGIC
+        const app = {
+            currentTopic: null,
+            currentQuestion: null,
+            isRecording: false,
+            recognition: null,
+            apiKey: localStorage.getItem('openai_key') || '',
+
+            init() {
+                this.renderTopics(topicsData);
+                this.setupSpeechRecognition();
+                
+                // Load saved key to input
+                if(this.apiKey) document.getElementById('api-key-input').value = this.apiKey;
+
+                // Search listener
+                document.getElementById('search-input').addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = topicsData.filter(t => t.title.toLowerCase().includes(term));
+                    this.renderTopics(filtered);
+                });
+            },
+
+            renderTopics(data) {
+                const grid = document.getElementById('topic-grid');
+                grid.innerHTML = data.map(topic => 
+                    <div onclick="app.openTopic('${topic.id}')" 
+                        class="bg-white rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 group">
+                        <div class="p-6">
+                            <div class="${topic.color} w-14 h-14 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid ${topic.icon} text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">${topic.title}</h3>
+                            <p class="text-sm text-gray-500">${topic.questions.length} Questions</p>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-primary">Luyện tập ngay</span>
+                            <i class="fa-solid fa-arrow-right text-gray-400 group-hover:text-primary transition"></i>
+                        </div>
+                    </div>
+                ).join('');
+            },
+
+            openTopic(id) {
+                this.currentTopic = topicsData.find(t => t.id === id);
+                if (!this.currentTopic) return;
+
+                document.getElementById('topic-view').classList.add('hidden');
+                document.getElementById('practice-view').classList.remove('hidden');
+                document.getElementById('practice-view').classList.add('flex');
+                
+                document.getElementById('current-topic-title').innerText = this.currentTopic.title;
+                
+                // Render Questions
+                const list = document.getElementById('question-list');
+                list.innerHTML = this.currentTopic.questions.map((q, index) => 
+                    <div onclick="app.selectQuestion(${index})" 
+                        class="question-item p-3 mb-2 rounded-lg cursor-pointer transition hover:bg-indigo-50 border border-transparent hover:border-indigo-100 text-gray-700 text-sm">
+                        ${index + 1}. ${q}
+                    </div>
+                ).join('');
+
+                // Reset state
+                this.selectQuestion(0);
+                this.clearTranscript();
+                document.getElementById('ai-result').classList.add('hidden');
+            },
+
+            selectQuestion(index) {
+                // UI Highlight
+                const items = document.querySelectorAll('.question-item');
+                items.forEach(el => el.classList.remove('bg-indigo-100', 'border-indigo-200', 'font-medium', 'text-primary'));
+                items[index].classList.add('bg-indigo-100', 'border-indigo-200', 'font-medium', 'text-primary');
+
+                this.currentQuestion = this.currentTopic.questions[index];
+                document.getElementById('active-question-text').innerText = this.currentQuestion;
+            },
+
+            goHome() {
+                document.getElementById('practice-view').classList.add('hidden');
+                document.getElementById('practice-view').classList.remove('flex');
+                document.getElementById('topic-view').classList.remove('hidden');
+                this.stopRecording();
+            },
+
+            setupSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            }
+                        }
+                        if (finalTranscript) {
+                            const area = document.getElementById('transcript-area');
+                            area.value += (area.value ? ' ' : '') + finalTranscript;
+                            area.scrollTop = area.scrollHeight;
+                        }
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech error:', event.error);
+                        this.stopRecording();
+                    };
+                } else {
+                    alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome.");
+                    document.getElementById('btn-record').disabled = true;
+                }
+            },
+
+            toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    this.startRecording();
+                }
+            },
+
+            startRecording() {
+                if (!this.recognition) return;
+                this.isRecording = true;
+                this.recognition.start();
+                
+                const btn = document.getElementById('btn-record');
+                btn.classList.add('recording-pulse', 'bg-red-600', 'text-white');
+                document.getElementById('record-status').innerText = "Đang ghi âm...";
+            },
+
+            stopRecording() {
+                if (!this.recognition) return;
+                this.isRecording = false;
+                this.recognition.stop();
+
+                const btn = document.getElementById('btn-record');
+                btn.classList.remove('recording-pulse', 'bg-red-600', 'text-white');
+                document.getElementById('record-status').innerText = "Nhấn để nói";
+            },
+
+            clearTranscript() {
+                document.getElementById('transcript-area').value = '';
+                document.getElementById('ai-result').classList.add('hidden');
+            },
+
+            toggleSettings() {
+                const modal = document.getElementById('settings-modal');
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                } else {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+            },
+
+            saveSettings() {
+                const key = document.getElementById('api-key-input').value.trim();
+                if (key) {
+                    localStorage.setItem('openai_key', key);
+                    this.apiKey = key;
+                    alert("Đã lưu API Key thành công!");
+                }
+                this.toggleSettings();
+            },
+
+            async analyzeSpeaking() {
+                const transcript = document.getElementById('transcript-area').value;
+                const aiBox = document.getElementById('ai-result');
+                const aiContent = document.getElementById('ai-content');
+
+                if (!transcript.trim()) {
+                    alert("Vui lòng ghi âm hoặc nhập câu trả lời trước khi chấm điểm.");
+                    return;
+                }
+
+                aiBox.classList.remove('hidden');
+                aiContent.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích câu trả lời của bạn...</div>';
+
+                // MOCK RESPONSE IF NO KEY (For Demo/Vercel preview without key)
+                if (!this.apiKey) {
+                    setTimeout(() => {
+                        const mockResponse = 
+**Lưu ý:** Đây là kết quả mô phỏng vì chưa có API Key.
+
+### Điểm ước lượng: 6.5
+
+**Grammar:**
+- Bạn sử dụng các câu đơn khá tốt.
+- *Gợi ý:* Hãy thử dùng thêm các từ nối như "However", "Furthermore" để câu phức tạp hơn.
+
+**Vocabulary:**
+- Từ vựng thuộc chủ đề ${this.currentTopic.title} khá ổn.
+- *Gợi ý nâng cao:* Thay vì dùng "good", hãy dùng "spectacular" hoặc "breathtaking".
+
+**Pronunciation:**
+- Cần chú ý âm đuôi (ending sounds) rõ hơn.
+                        ;
+                        aiContent.innerHTML = marked.parse(mockResponse);
+                        alert("Vui lòng nhập API Key trong phần Cài đặt để sử dụng AI thật.");
+                    }, 1500);
+                    return;
+                }
+
+                // REAL API CALL (Logic for when key is added)
+                try {
+                    const prompt = 
+                    Act as an IELTS Examiner. 
+                    Topic: ${this.currentTopic.title}
+                    Question: "${this.currentQuestion}"
+                    Student Answer: "${transcript}"
+                    
+                    Please provide feedback in Vietnamese:
+                    1. Estimated Band Score (0-9)
+                    2. Corrections for Grammar & Vocabulary errors.
+                    3. Better version of the answer (Paraphrase).
+                    Format with Markdown.
+                    ;
+
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': Bearer ${this.apiKey}
+                        },
+                        body: JSON.stringify({
+                            model: document.getElementById('ai-model-select').value,
+                            messages: [{ role: "user", content: prompt }],
+                            temperature: 0.7
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message);
+                    
+                    aiContent.innerHTML = marked.parse(data.choices[0].message.content);
+
+                } catch (error) {
+                    aiContent.innerHTML = <div class="text-red-500">Lỗi kết nối AI: ${error.message}. Kiểm tra lại API Key.</div>;
+                }
+            }
+        };
+
+        // Start App
+        window.onload = () => app.init();
+
+    </script>
+</body>
+</html>
+
+ChatGPT đã nói:
+Dưới đây là bản chỉnh sửa để bạn dùng được cả OpenAI (ChatGPT) và Google Gemini trong cùng 1 file HTML.
+
+✅ Điểm quan trọng làm Gemini “không chạy” trong code của bạn:
+
+Bạn đang gọi OpenAI endpoint (https://api.openai.com/v1/chat/completions) cho mọi key → Gemini key chắc chắn lỗi.
+
+Gemini API dùng endpoint khác và model name khác (ví dụ: gemini-1.5-flash, gemini-1.5-pro…), và payload cũng khác.
+
+1) Thay đổi UI: thêm chọn “Nhà cung cấp AI”
+Trong phần Settings Modal, thêm dropdown chọn Provider (OpenAI/Gemini) và model tương ứng.
+
+👉 Bạn chỉ cần thay đoạn Settings Modal của bạn bằng đoạn dưới (hoặc sửa đúng các phần tương ứng):
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold">Cài đặt AI</h3>
+      <button onclick="app.toggleSettings()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+    </div>
+
+    <!-- Provider -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Nhà cung cấp AI</label>
+      <select id="ai-provider-select" class="w-full border border-gray-300 rounded-lg px-3 py-2" onchange="app.onProviderChange()">
+        <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="gemini">Google Gemini</option>
+      </select>
+      <p class="text-xs text-gray-500 mt-1">Chọn OpenAI hoặc Gemini để gọi đúng API.</p>
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+      <input type="password" id="api-key-input" placeholder="sk-... hoặc AIza..." class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none">
+      <p class="text-xs text-gray-500 mt-1">Key của bạn được lưu cục bộ trên trình duyệt.</p>
+    </div>
+
+    <!-- Model -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Mô hình AI</label>
+
+      <!-- OpenAI models -->
+      <select id="openai-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+        <option value="gpt-4o-mini">GPT-4o mini (Nhanh/tiết kiệm)</option>
+        <option value="gpt-4o">GPT-4o (Chính xác)</option>
+      </select>
+
+      <!-- Gemini models -->
+      <select id="gemini-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 hidden">
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Nhanh)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Chính xác)</option>
+      </select>
+    </div>
+
+    <button onclick="app.saveSettings()" class="w-full bg-primary text-white rounded-lg py-2 font-medium hover:bg-indigo-700">
+      Lưu cài đặt
+    </button>
+  </div>
+</div>
+2) Thay đổi JS: lưu provider + gọi đúng API
+👉 Bạn chỉ cần thay phần APP LOGIC (const app = { ... }) bằng bản dưới (mình giữ nguyên các hàm khác của bạn, chỉ bổ sung/chỉnh các phần liên quan AI):
+
+Lưu ý: đây là “drop-in replacement” cho object app của bạn. Bạn copy đè lên const app = { ... } hiện tại.
+
+<script>
+  // APP LOGIC
+  const app = {
+    currentTopic: null,
+    currentQuestion: null,
+    isRecording: false,
+    recognition: null,
+
+    // Settings
+    provider: localStorage.getItem('ai_provider') || 'openai',
+    apiKey: localStorage.getItem('ai_key') || '',
+    openaiModel: localStorage.getItem('openai_model') || 'gpt-4o-mini',
+    geminiModel: localStorage.getItem('gemini_model') || 'gemini-1.5-flash',
+
+    init() {
+      this.renderTopics(topicsData);
+      this.setupSpeechRecognition();
+
+      // Load saved settings to UI
+      document.getElementById('ai-provider-select').value = this.provider;
+      document.getElementById('api-key-input').value = this.apiKey;
+
+      document.getElementById('openai-model-select').value = this.openaiModel;
+      document.getElementById('gemini-model-select').value = this.geminiModel;
+
+      this.onProviderChange();
+
+      // Search listener
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = topicsData.filter(t => t.title.toLowerCase().includes(term));
+        this.renderTopics(filtered);
+      });
+    },
+
+    onProviderChange() {
+      const provider = document.getElementById('ai-provider-select').value;
+      const openaiSel = document.getElementById('openai-model-select');
+      const geminiSel = document.getElementById('gemini-model-select');
+
+      if (provider === 'openai') {
+        openaiSel.classList.remove('hidden');
+        geminiSel.classList.add('hidden');
+      } else {
+        geminiSel.classList.remove('hidden');
+        openaiSel.classList.add('hidden');
+      }
+    },
+
+    saveSettings() {
+      const provider = document.getElementById('ai-provider-select').value;
+      const key = document.getElementById('api-key-input').value.trim();
+      const openaiModel = document.getElementById('openai-model-select').value;
+      const geminiModel = document.getElementById('gemini-model-select').value;
+
+      this.provider = provider;
+      this.apiKey = key;
+      this.openaiModel = openaiModel;
+      this.geminiModel = geminiModel;
+
+      localStorage.setItem('ai_provider', provider);
+      localStorage.setItem('ai_key', key);
+      localStorage.setItem('openai_model', openaiModel);
+      localStorage.setItem('gemini_model', geminiModel);
+
+      alert("Đã lưu cài đặt AI!");
+      this.toggleSettings();
+    },
+
+    // ======= UI / NAV (giữ từ code bạn) =======
+    renderTopics(data) {
+      const grid = document.getElementById('topic-grid');
+      grid.innerHTML = data.map(topic => `
+        <div onclick="app.openTopic('${topic.id}')"
+          class="bg-white rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 group">
+          <div class="p-6">
+            <div class="${topic.color} w-14 h-14 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid ${topic.icon} text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">${topic.title}</h3>
+            <p class="text-sm text-gray-500">${topic.questions.length} Questions</p>
+          </div>
+          <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-between items-center">
+            <span class="text-xs font-semibold text-primary">Luyện tập ngay</span>
+            <i class="fa-solid fa-arrow-right text-gray-400 group-hover:text-primary transition"></i>
+          </div>
+        </div>
+      `).join('');
+    },
+
+    openTopic(id) {
+      this.currentTopic = topicsData.find(t => t.id === id);
+      if (!this.currentTopic) return;
+
+      document.getElementById('topic-view').classList.add('hidden');
+      document.getElementById('practice-view').classList.remove('hidden');
+      document.getElementById('practice-view').classList.add('flex');
+
+      document.getElementById('current-topic-title').innerText = this.currentTopic.title;
+
+      const list = document.getElementById('question-list');
+      list.innerHTML = this.currentTopic.questions.map((q, index) => `
+        <div onclick="app.selectQuestion(${index})"
+          class="question-item p-3 mb-2 rounded-lg cursor-pointer transition hover:bg-indigo-50 border border-transparent hover:border-indigo-100 text-gray-700 text-sm">
+          ${index + 1}. ${q}
+        </div>
+      `).join('');
+
+      this.selectQuestion(0);
+      this.clearTranscript();
+      document.getElementById('ai-result').classList.add('hidden');
+    },
+
+    selectQuestion(index) {
+      const items = document.querySelectorAll('.question-item');
+      items.forEach(el => el.classList.remove('bg-indigo-100', 'border-indigo-200', 'font-medium', 'text-primary'));
+      items[index].classList.add('bg-indigo-100', 'border-indigo-200', 'font-medium', 'text-primary');
+
+      this.currentQuestion = this.currentTopic.questions[index];
+      document.getElementById('active-question-text').innerText = this.currentQuestion;
+    },
+
+    goHome() {
+      document.getElementById('practice-view').classList.add('hidden');
+      document.getElementById('practice-view').classList.remove('flex');
+      document.getElementById('topic-view').classList.remove('hidden');
+      this.stopRecording();
+    },
+
+    toggleSettings() {
+      const modal = document.getElementById('settings-modal');
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    },
+
+    setupSpeechRecognition() {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.lang = 'en-US';
+
+        this.recognition.onresult = (event) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            const area = document.getElementById('transcript-area');
+            area.value += (area.value ? ' ' : '') + finalTranscript;
+            area.scrollTop = area.scrollHeight;
+          }
+        };
+
+        this.recognition.onerror = (event) => {
+          console.error('Speech error:', event.error);
+          this.stopRecording();
+        };
+      } else {
+        alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome.");
+        document.getElementById('btn-record').disabled = true;
+      }
+    },
+
+    toggleRecording() {
+      if (this.isRecording) this.stopRecording();
+      else this.startRecording();
+    },
+
+    startRecording() {
+      if (!this.recognition) return;
+      this.isRecording = true;
+      this.recognition.start();
+
+      const btn = document.getElementById('btn-record');
+      btn.classList.add('recording-pulse', 'bg-red-600', 'text-white');
+      document.getElementById('record-status').innerText = "Đang ghi âm...";
+    },
+
+    stopRecording() {
+      if (!this.recognition) return;
+      this.isRecording = false;
+      this.recognition.stop();
+
+      const btn = document.getElementById('btn-record');
+      btn.classList.remove('recording-pulse', 'bg-red-600', 'text-white');
+      document.getElementById('record-status').innerText = "Nhấn để nói";
+    },
+
+    clearTranscript() {
+      document.getElementById('transcript-area').value = '';
+      document.getElementById('ai-result').classList.add('hidden');
+    },
+
+    // ======= AI HELPERS =======
+    buildPrompt(transcript) {
+      return `
+Act as an IELTS Speaking Examiner.
+
+Topic: ${this.currentTopic?.title || "Unknown"}
+Question: "${this.currentQuestion || "Unknown"}"
+Student Answer: "${transcript}"
+
+Please provide feedback in Vietnamese:
+1. Estimated Band Score (0-9)
+2. Corrections for Grammar & Vocabulary errors (show original -> corrected)
+3. Better version of the answer (paraphrase, natural, band 7+)
+4. 5 vocabulary upgrades + collocations relevant to the topic
+Format with Markdown.
+`.trim();
+    },
+
+    async callOpenAI(prompt) {
+      const model = this.openaiModel;
+
+      // Newer OpenAI Responses API (recommended)
+      const resp = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          input: prompt,
+          temperature: 0.7
+        })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        const msg = data?.error?.message || `OpenAI error (${resp.status})`;
+        throw new Error(msg);
+      }
+
+      // Extract text safely
+      const text =
+        data.output_text ||
+        (data.output && data.output[0] && data.output[0].content && data.output[0].content[0] && data.output[0].content[0].text) ||
+        '';
+
+      if (!text) throw new Error("OpenAI trả về rỗng.");
+      return text;
+    },
+
+    async callGemini(prompt) {
+      const model = this.geminiModel;
+
+      // Gemini Generative Language API
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            { role: "user", parts: [{ text: prompt }] }
+          ],
+          generationConfig: {
+            temperature: 0.7
+          }
+        })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) {
+        const msg = data?.error?.message || `Gemini error (${resp.status})`;
+        throw new Error(msg);
+      }
+
+      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      if (!text) throw new Error("Gemini trả về rỗng.");
+      return text;
+    },
+
+    // ======= MAIN ANALYZE =======
+    async analyzeSpeaking() {
+      const transcript = document.getElementById('transcript-area').value;
+      const aiBox = document.getElementById('ai-result');
+      const aiContent = document.getElementById('ai-content');
+
+      if (!transcript.trim()) {
+        alert("Vui lòng ghi âm hoặc nhập câu trả lời trước khi chấm điểm.");
+        return;
+      }
+
+      aiBox.classList.remove('hidden');
+      aiContent.innerHTML = '<div class="flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích câu trả lời của bạn...</div>';
+
+      // Demo mode if no key
+      if (!this.apiKey) {
+        setTimeout(() => {
+          const mockResponse = `
+**Lưu ý:** Đây là kết quả mô phỏng vì chưa có API Key.
+
+### Điểm ước lượng: 6.5
+
+**Grammar**
+- Câu khá rõ ý, nhưng nên tăng câu phức.
+- Gợi ý: thêm "However / Moreover / As a result".
+
+**Vocabulary**
+- Từ vựng ổn theo chủ đề ${this.currentTopic?.title || ""}.
+- Gợi ý nâng cao: thay "good" → "impressive / remarkable".
+
+**Pronunciation**
+- Chú ý ending sounds và nhấn trọng âm từ khóa.
+`;
+          aiContent.innerHTML = marked.parse(mockResponse);
+          alert("Hãy nhập API Key trong Cài đặt để dùng AI thật.");
+        }, 900);
+        return;
+      }
+
+      try {
+        const prompt = this.buildPrompt(transcript);
+
+        let outputText = '';
+        if (this.provider === 'gemini') {
+          outputText = await this.callGemini(prompt);
+        } else {
+          outputText = await this.callOpenAI(prompt);
+        }
+
+        aiContent.innerHTML = marked.parse(outputText);
+
+      } catch (error) {
+        aiContent.innerHTML = `<div class="text-red-500 font-medium">Lỗi AI: ${String(error.message || error)}</div>
+        <div class="text-xs text-gray-500 mt-2">
+          Gợi ý: kiểm tra Provider đúng chưa (OpenAI/Gemini), model có tồn tại không, và API key còn hiệu lực.
+        </div>`;
+      }
+    }
+  };
+
+  window.onload = () => app.init();
+</script>
+3) Vì sao Gemini của bạn hay lỗi “model not found”?
+Nếu bạn gặp lại lỗi kiểu:
+models/gemini-1.5-flash is not found for API version v1beta...
+thì thường do:
+
+bạn đang gọi sai endpoint (đã sửa ở trên),
+
+hoặc key Gemini của bạn không được cấp quyền / region,
+
+hoặc model name sai (đổi qua gemini-1.5-pro hoặc kiểm tra model list trong Google AI Studio).
+
+4) Lưu ý quan trọng (để khỏi “lộ key”)
+Bạn đang lưu key ở localStorage → ai mở máy bạn cũng lấy được key.
+Nếu bạn deploy public trên Vercel/GitHub Pages: không nên nhúng key ở client. Giải pháp đúng là tạo serverless function (Vercel) làm proxy.
+
+Nếu bạn muốn, mình có thể đưa luôn bản Vercel serverless (api/openai.js + api/gemini.js) để key nằm an toàn trong Environment Variables.
+
+
+Bạn đã nói:
+tôi muốn hiện ra các chế độ ai mới nhất củ gemini như 3 pro và chatgpt  thì đã tới 5.2
+
+ChatGPT đã nói:
+
+Đã suy nghĩ trong 7s
+Được. Hiện tại Gemini đã có “Gemini 3 Pro” (và 3 Flash), còn phía OpenAI đời mới là GPT-5.2 (trong ChatGPT có các biến thể như Instant / Thinking / Pro). 
+
+Vấn đề là: model hiển thị trong UI ≠ model id dùng cho API. Mình gợi ý bạn làm UI theo 2 lớp:
+
+Tên thân thiện (Gemini 3 Pro / GPT-5.2 Thinking…)
+
+Model ID thật để gọi API.
+
+Dưới đây là phần bạn cần thay trong code của bạn để hiện “Gemini 3 Pro” và “GPT-5.2” và gọi đúng API.
+
+1) Cập nhật phần “Mô hình AI” trong Settings (HTML)
+Thay dropdown model cũ bằng 2 dropdown (OpenAI/Gemini) như mình đưa trước, nhưng cập nhật option “mới nhất”:
+
+<!-- Provider -->
+<select id="ai-provider-select" class="w-full border border-gray-300 rounded-lg px-3 py-2" onchange="app.onProviderChange()">
+  <option value="openai">OpenAI (ChatGPT)</option>
+  <option value="gemini">Google Gemini</option>
+</select>
+
+<!-- OpenAI models -->
+<select id="openai-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+  <option value="gpt-5.2">GPT-5.2 (Base)</option>
+  <option value="gpt-5.2-thinking">GPT-5.2 Thinking</option>
+  <option value="gpt-5.2-pro">GPT-5.2 Pro</option>
+</select>
+
+<!-- Gemini models -->
+<select id="gemini-model-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 hidden">
+  <option value="gemini-3-pro">Gemini 3 Pro</option>
+  <option value="gemini-3-flash">Gemini 3 Flash</option>
+</select>
+Lưu ý: Google docs thường ghi “Gemini 3 Pro” nhưng model-id để gọi API có thể là dạng gemini-3-pro (tùy hệ sinh thái: Gemini API / Vertex AI). Bạn nên bám theo trang “Gemini models” của Google AI for Developers khi map model-id. 
+
+2) Cập nhật chỗ gọi Gemini: dùng đúng endpoint + đúng model-id
+Nếu bạn dùng Gemini API (Google AI for Developers), endpoint chuẩn là dạng generativelanguage.googleapis.com/.../models/{model}:generateContent. 
+
+👉 Thay hàm callGemini() của bạn bằng bản an toàn hơn (tự map model id “3 pro/3 flash”):
+
+getGeminiModelId() {
+  // UI value -> API model id
+  const v = this.geminiModel;
+  if (v === 'gemini-3-pro') return 'gemini-3-pro';
+  if (v === 'gemini-3-flash') return 'gemini-3-flash';
+  // fallback
+  return 'gemini-3-pro';
+},
+
+async callGemini(prompt) {
+  const modelId = this.getGeminiModelId();
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7 }
+    })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data?.error?.message || `Gemini error (${resp.status})`);
+
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+  if (!text) throw new Error("Gemini trả về rỗng.");
+  return text;
+}
+3) Cập nhật OpenAI: GPT-5.2 dùng Responses API (đúng đời mới)
+OpenAI khuyến nghị dùng Responses API thay cho Chat Completions cho dự án mới. 
+
+Và GPT-5.2 có trang model docs riêng. 
+
+👉 Hãy để callOpenAI() theo Responses API như bạn đang làm (bản trước mình đưa là đúng hướng). Chỉ cần đảm bảo model id bạn chọn là gpt-5.2 hoặc gpt-5.2-thinking/gpt-5.2-pro (nếu tài khoản bạn được cấp).
+
+Ví dụ:
+
+async callOpenAI(prompt) {
+  const model = this.openaiModel; // gpt-5.2 / gpt-5.2-thinking / gpt-5.2-pro
+
+  const resp = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      input: prompt,
+      temperature: 0.7
+    })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data?.error?.message || `OpenAI error (${resp.status})`);
+
+  const text = data.output_text || '';
+  if (!text) throw new Error("OpenAI trả về rỗng.");
+  return text;
+}
+4) Vì sao bạn “không thấy model mới nhất” hoặc chọn là lỗi?
+2 nguyên nhân hay gặp nhất:
+
+Bạn hiển thị tên model mới nhưng key chưa có quyền dùng model đó → API báo 403/404 (đặc biệt với Pro/Thinking). (OpenAI: xem docs model; Google: tùy key/quyền/plan). 
+
+Bạn dùng sai model-id (ví dụ ghi “Gemini 3 Pro” nhưng gọi gemini-3-pro/gemini-1.5-pro lẫn lộn).
+
+Nếu bạn muốn mình làm “chuẩn nhất”: mình sẽ viết thêm 1 nút “Kiểm tra key” để:
+
+OpenAI: gọi endpoint models/docs tương ứng (hoặc thử request nhỏ) rồi hiện danh sách model dùng được
+
+Gemini: gọi list models (hoặc thử request nhỏ) rồi hiện các model khả dụng
+
+Bạn chỉ cần nói bạn đang dùng Gemini theo hướng nào: Gemini API (AI Studio key) hay Vertex AI (Google Cloud), vì model-id/endpoint của 2 loại này khác nhau.
+
+
+Bạn đã nói:
+toàn bộ mã htlm
+
+ChatGPT đã nói:
+<!DOCTYPE html>
+<html lang="vi">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IELTS Speaking Pro - AI Powered</title>
@@ -591,3 +1757,13 @@ Format with Markdown.
   </script>
 </body>
 </html>
+
+
+
+Tiện ích - Hanzii
+
+<
+[ < ]
+1. <
+
+Xem chi tiết
